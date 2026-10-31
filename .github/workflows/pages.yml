@@ -1,1 +1,44 @@
+name: 강의자료 홈페이지 게시
 
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: 저장소 가져오기
+        uses: actions/checkout@v6
+
+      - name: Pages 설정
+        uses: actions/configure-pages@v5
+
+      - name: 강의자료 검사
+        run: |
+          node --check site/assets/app.js
+          node --check site/assets/materials.js
+          node scripts/check-site.mjs
+
+      - name: 공개 파일 업로드
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+
+      - name: 홈페이지 게시
+        id: deployment
+        uses: actions/deploy-pages@v4
